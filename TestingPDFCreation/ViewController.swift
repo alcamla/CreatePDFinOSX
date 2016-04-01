@@ -7,6 +7,8 @@
 //
 
 import Cocoa
+import CoreText
+
 
 class ViewController: NSViewController {
 
@@ -36,14 +38,20 @@ class ViewController: NSViewController {
         CGPDFContextBeginPage(aCgPDFContextRef, nil)
         
         // Insert the content to the page
-        let stringMe:NSString = "ALEJANDRO CAMACHO" as NSString
+        let stringMe:NSAttributedString = NSAttributedString(string: "ALEJANDRO CAMACHO")
         CGContextSetTextDrawingMode(aCgPDFContextRef, CGTextDrawingMode.Fill)
         // Set the fill color for the context
         let color = NSColor.blackColor()
         CGContextSetFillColorWithColor(aCgPDFContextRef, color.CGColor)
-        //stringMe.drawA
+        // Create a frame
         
+        let frameSetter:CTFramesetterRef = CTFramesetterCreateWithAttributedString(stringMe)
+        let path:CGMutablePathRef = CGPathCreateMutable()
+        CGPathAddRect(path, nil, CGRectMake(10,0, 500,500))
+        let frame:CTFrameRef = CTFramesetterCreateFrame(frameSetter, CFRangeMake(0, stringMe.length), path, nil)
+        CTFrameDraw(frame, aCgPDFContextRef!)
         CGPDFContextEndPage(aCgPDFContextRef)
+        print("PDF was created successfully???")
     }
     
     func createPDFContextWithRect(inout aCgRectinMediaBox:CGRect, path aCfStrPath:CFStringRef )-> CGContext?{
