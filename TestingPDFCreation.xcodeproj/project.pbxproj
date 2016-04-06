@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6C061FFB1CB59C5100DD569D /* PDFRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C061FFA1CB59C5100DD569D /* PDFRenderer.m */; };
 		6C85DA921CAC68F4007053FC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C85DA911CAC68F4007053FC /* AppDelegate.swift */; };
 		6C85DA941CAC68F4007053FC /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C85DA931CAC68F4007053FC /* ViewController.swift */; };
 		6C85DA961CAC68F4007053FC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6C85DA951CAC68F4007053FC /* Assets.xcassets */; };
@@ -33,6 +34,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6C061FF81CB59C5000DD569D /* TestingPDFCreation-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TestingPDFCreation-Bridging-Header.h"; sourceTree = "<group>"; };
+		6C061FF91CB59C5100DD569D /* PDFRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PDFRenderer.h; path = TestingPDFCreation/PDFRenderer.h; sourceTree = "<group>"; };
+		6C061FFA1CB59C5100DD569D /* PDFRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PDFRenderer.m; path = TestingPDFCreation/PDFRenderer.m; sourceTree = "<group>"; };
 		6C85DA8E1CAC68F4007053FC /* TestingPDFCreation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestingPDFCreation.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C85DA911CAC68F4007053FC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6C85DA931CAC68F4007053FC /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -75,10 +79,13 @@
 		6C85DA851CAC68F4007053FC = {
 			isa = PBXGroup;
 			children = (
+				6C061FF91CB59C5100DD569D /* PDFRenderer.h */,
+				6C061FFA1CB59C5100DD569D /* PDFRenderer.m */,
 				6C85DA901CAC68F4007053FC /* TestingPDFCreation */,
 				6C85DAA21CAC68F4007053FC /* TestingPDFCreationTests */,
 				6C85DAAD1CAC68F4007053FC /* TestingPDFCreationUITests */,
 				6C85DA8F1CAC68F4007053FC /* Products */,
+				6C061FF81CB59C5000DD569D /* TestingPDFCreation-Bridging-Header.h */,
 			);
 			sourceTree = "<group>";
 		};
@@ -253,6 +260,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6C85DA941CAC68F4007053FC /* ViewController.swift in Sources */,
+				6C061FFB1CB59C5100DD569D /* PDFRenderer.m in Sources */,
 				6C85DA921CAC68F4007053FC /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -386,11 +394,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = TestingPDFCreation/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gibicgroup.TestingPDFCreation;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "TestingPDFCreation-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
@@ -398,11 +409,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = TestingPDFCreation/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gibicgroup.TestingPDFCreation;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "TestingPDFCreation-Bridging-Header.h";
 			};
 			name = Release;
 		};
@@ -475,6 +488,7 @@
 				6C85DAB51CAC68F4007053FC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		6C85DAB61CAC68F4007053FC /* Build configuration list for PBXNativeTarget "TestingPDFCreationTests" */ = {
 			isa = XCConfigurationList;
@@ -483,6 +497,7 @@
 				6C85DAB81CAC68F4007053FC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		6C85DAB91CAC68F4007053FC /* Build configuration list for PBXNativeTarget "TestingPDFCreationUITests" */ = {
 			isa = XCConfigurationList;
@@ -491,6 +506,7 @@
 				6C85DABB1CAC68F4007053FC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

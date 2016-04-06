@@ -11,20 +11,7 @@ import CoreText
 
 
 class ViewController: NSViewController {
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
-    }
-
-    override var representedObject: AnyObject? {
-        didSet {
-        // Update the view, if already loaded.
-        }
-    }
     
-
     /**
      An example of generating a PDF using pure *Quartz 2D* pipeline.
      
@@ -32,6 +19,8 @@ class ViewController: NSViewController {
      [PDF creation in Cocoa]: http://stackoverflow.com/questions/14118933/pdf-creation-in-cocoa
      
      ### Important note when working with Quartz
+     The coordinate system of quartz is different from the coordinate system in iOS higher order API's, such as TextKit. The origin is on 
+     the bottom left corner, the Y coordinate increases upwards and the X coordinate increases to the right.
      
      ### Useful Links
      * For the CoreText methods used here view [Ray Wenderlich CoreText Tutorial]
@@ -39,18 +28,19 @@ class ViewController: NSViewController {
      */
     @IBAction func generatePDF(sender: AnyObject) {
         
-        // An useful way of getting the user's home directory
+        /// An useful way of getting the user's home directory
         let userHomeString = NSHomeDirectory()
         
-        // The final path were the file will be saved
+        /// The final path were the file will be saved
         let filePathString = userHomeString + "/Desktop/createdPDF.pdf"
         
         
-        // Create  rectangle corresponding to the desired page size.
+        /// Create  rectangle corresponding to the desired page size.
         var rect = CGRectMake(0, 0, 612, 792)
         
-        // Create the context to be used in the pdf rendering
-        let aCgPDFContextRef:CGContextRef? = createPDFContextWithRect(&rect, path: filePathString as NSString)
+        /// Create the context to be used in the pdf rendering
+        //let aCgPDFContextRef:CGContextRef? = createPDFContextWithRect(&rect, path: filePathString as NSString)
+        let aCgPDFContextRef = PDFRenderer.createPDFContext(rect, path: filePathString as NSString).takeRetainedValue()
         
         /**
          The First page Contents
@@ -114,7 +104,7 @@ class ViewController: NSViewController {
         let frame:CTFrameRef = CTFramesetterCreateFrame(frameSetter, CFRangeMake(0, 0), path, nil)
         
         // Draw the specified frame in the given context
-        CTFrameDraw(frame, aCgPDFContextRef!)
+        CTFrameDraw(frame, aCgPDFContextRef)
         
         // Terminate the page
         CGPDFContextEndPage(aCgPDFContextRef)
@@ -128,7 +118,7 @@ class ViewController: NSViewController {
         CGPDFContextBeginPage(aCgPDFContextRef, nil)
         
         // Draw the specified frame in the given context
-        CTFrameDraw(frame, aCgPDFContextRef!)
+        CTFrameDraw(frame, aCgPDFContextRef)
         
         // Terminate the page
         CGPDFContextEndPage(aCgPDFContextRef)
@@ -140,8 +130,81 @@ class ViewController: NSViewController {
          */
         
         
+        CGPDFContextBeginPage(aCgPDFContextRef, nil)
+        
+           let tableString = "MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove."
         
         
+                let tableAttrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0)
+                CFAttributedStringReplaceString(tableAttrString, CFRangeMake(0, 0), tableString)
+                let tableFrameSetter:CTFramesetterRef = CTFramesetterCreateWithAttributedString(tableAttrString)
+        
+                // Call create columnsWithColumnCount function to create an array of three paths (columns).
+                let columnPaths = PDFRenderer.createColumnsWithColumnCount(3).takeRetainedValue()
+                let pathCount:CFIndex = CFArrayGetCount(columnPaths)
+                var startIndex:CFIndex = 0
+        
+        
+        
+                // Create a frame for each column
+                for column in 0..<pathCount{
+                    // Get the path for this column
+                    let pathRef = CFArrayGetValueAtIndex(columnPaths, column)
+                    //let path:CGPath = pathPointer.memory as! CGPathRef
+                    let path:CGMutablePathRef = pathRef as! CGMutablePathRef
+        
+                    // Create a frame for this column and draw it
+                    let frame:CTFrameRef = CTFramesetterCreateFrame(tableFrameSetter, CFRangeMake(startIndex, 0), path, nil)
+        
+        
+                    CTFrameDraw(frame, aCgPDFContextRef)
+        
+                    // Start the next frame at the first character not visible in this frame.
+                    let frameRange = CTFrameGetVisibleStringRange(frame)
+                    startIndex += frameRange.length
+                    
+                }
+                
+                CGPDFContextEndPage(aCgPDFContextRef)
+        
+//        
+//        CGPDFContextBeginPage(aCgPDFContextRef, nil)
+//        
+//        // Lets create a table here
+//        
+//        let tableString = "MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove."
+//        
+//        
+//        let tableAttrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0)
+//        CFAttributedStringReplaceString(tableAttrString, CFRangeMake(0, 0), tableString)
+//        let tableFrameSetter:CTFramesetterRef = CTFramesetterCreateWithAttributedString(tableAttrString)
+//        
+//        // Call create columnsWithColumnCount function to create an array of three paths (columns).
+//        let columnPaths = self.createColumnsWithColunmCount(3)
+//        let pathCount:CFIndex = CFArrayGetCount(columnPaths)
+//        var startIndex:CFIndex = 0
+//        
+//        
+//        // Create a frame for each column
+//        for column in 0..<pathCount{
+//            // Get the path for this column
+//            let pathRef = CFArrayGetValueAtIndex(columnPaths, column)
+//            //let path:CGPath = pathPointer.memory as! CGPathRef
+//            let path:CGMutablePathRef = pathRef as! CGMutablePathRef
+//            
+//            // Create a frame for this column and draw it
+//            let frame:CTFrameRef = CTFramesetterCreateFrame(tableFrameSetter, CFRangeMake(startIndex, 0), path, nil)
+//            
+//            
+//            CTFrameDraw(frame, aCgPDFContextRef!)
+//            
+//            // Start the next frame at the first character not visible in this frame.
+//            let frameRange = CTFrameGetVisibleStringRange(frame)
+//            startIndex += frameRange.length
+//            
+//        }
+//        
+//        CGPDFContextEndPage(aCgPDFContextRef)
         
     }
     
@@ -160,7 +223,41 @@ class ViewController: NSViewController {
         return aCgContextRefNewPDF
     }
     
+    func createColumnsWithColunmCount(columnCount:Int)->(CFArrayRef){
+        
+        let columnRects:UnsafeMutablePointer<CGRect> = UnsafeMutablePointer<CGRect>(calloc(columnCount, sizeofValue(CGRect)))
+        
+        // Set the first column to cover the entire view
+        let pageSize = CGRectMake(0, 0, 612, 792)
+        columnRects[0] = pageSize
+        
+        // Divide the columns equally across the frame's width
+        let columnWidth:CGFloat = CGRectGetWidth(pageSize)/CGFloat(columnCount)
+        
+        for column in 0..<columnCount{
+            CGRectDivide(columnRects[column], &columnRects[column], &columnRects[column+1], columnWidth, CGRectEdge.MinXEdge)
+        }
+        
+        // Insert all the columns by a few pixels of margin
+        for column in 0..<columnCount{
+            columnRects[column] = CGRectInset(columnRects[column], 8.0, 15.0)
+        }
+        // Create an array of layout paths, one for each column
+        var callBacks = CFArrayCallBacks()
+        let array:CFMutableArrayRef = CFArrayCreateMutable(kCFAllocatorDefault, columnCount, &callBacks)
+        
+        for column in 0..<columnCount{
+            var path:CGMutablePathRef = CGPathCreateMutable()
+            CGPathAddRect(path, nil, columnRects[column])
+            CFArrayInsertValueAtIndex(array, column, &path)
+        }
+        
+        return array
+    }
+    
+    
 
+    
 
 }
 
