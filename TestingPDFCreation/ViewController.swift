@@ -40,7 +40,7 @@ class ViewController: NSViewController {
         
         /// Create the context to be used in the pdf rendering
         //let aCgPDFContextRef:CGContextRef? = createPDFContextWithRect(&rect, path: filePathString as NSString)
-        let aCgPDFContextRef = PDFRenderer.createPDFContext(rect, path: filePathString as NSString).takeRetainedValue()
+        let aCgPDFContextRef = PDFRenderer.newPDFContext(rect, path: filePathString as NSString).takeRetainedValue()
         
         /**
          The First page Contents
@@ -130,81 +130,15 @@ class ViewController: NSViewController {
          */
         
         
-        CGPDFContextBeginPage(aCgPDFContextRef, nil)
         
-           let tableString = "MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove."
+        let tableString = "MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove.MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove.MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove.MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove.MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove.MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove."
         
+        CGPDFContextBeginPage(aCgPDFContextRef, nil);
         
-                let tableAttrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0)
-                CFAttributedStringReplaceString(tableAttrString, CFRangeMake(0, 0), tableString)
-                let tableFrameSetter:CTFramesetterRef = CTFramesetterCreateWithAttributedString(tableAttrString)
+        PDFRenderer.createColumnarContentInPDFContext(aCgPDFContextRef, withText: tableString)
         
-                // Call create columnsWithColumnCount function to create an array of three paths (columns).
-                let columnPaths = PDFRenderer.createColumnsWithColumnCount(3).takeRetainedValue()
-                let pathCount:CFIndex = CFArrayGetCount(columnPaths)
-                var startIndex:CFIndex = 0
+        CGPDFContextEndPage(aCgPDFContextRef);
         
-        
-        
-                // Create a frame for each column
-                for column in 0..<pathCount{
-                    // Get the path for this column
-                    let pathRef = CFArrayGetValueAtIndex(columnPaths, column)
-                    //let path:CGPath = pathPointer.memory as! CGPathRef
-                    let path:CGMutablePathRef = pathRef as! CGMutablePathRef
-        
-                    // Create a frame for this column and draw it
-                    let frame:CTFrameRef = CTFramesetterCreateFrame(tableFrameSetter, CFRangeMake(startIndex, 0), path, nil)
-        
-        
-                    CTFrameDraw(frame, aCgPDFContextRef)
-        
-                    // Start the next frame at the first character not visible in this frame.
-                    let frameRange = CTFrameGetVisibleStringRange(frame)
-                    startIndex += frameRange.length
-                    
-                }
-                
-                CGPDFContextEndPage(aCgPDFContextRef)
-        
-//        
-//        CGPDFContextBeginPage(aCgPDFContextRef, nil)
-//        
-//        // Lets create a table here
-//        
-//        let tableString = "MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove."
-//        
-//        
-//        let tableAttrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0)
-//        CFAttributedStringReplaceString(tableAttrString, CFRangeMake(0, 0), tableString)
-//        let tableFrameSetter:CTFramesetterRef = CTFramesetterCreateWithAttributedString(tableAttrString)
-//        
-//        // Call create columnsWithColumnCount function to create an array of three paths (columns).
-//        let columnPaths = self.createColumnsWithColunmCount(3)
-//        let pathCount:CFIndex = CFArrayGetCount(columnPaths)
-//        var startIndex:CFIndex = 0
-//        
-//        
-//        // Create a frame for each column
-//        for column in 0..<pathCount{
-//            // Get the path for this column
-//            let pathRef = CFArrayGetValueAtIndex(columnPaths, column)
-//            //let path:CGPath = pathPointer.memory as! CGPathRef
-//            let path:CGMutablePathRef = pathRef as! CGMutablePathRef
-//            
-//            // Create a frame for this column and draw it
-//            let frame:CTFrameRef = CTFramesetterCreateFrame(tableFrameSetter, CFRangeMake(startIndex, 0), path, nil)
-//            
-//            
-//            CTFrameDraw(frame, aCgPDFContextRef!)
-//            
-//            // Start the next frame at the first character not visible in this frame.
-//            let frameRange = CTFrameGetVisibleStringRange(frame)
-//            startIndex += frameRange.length
-//            
-//        }
-//        
-//        CGPDFContextEndPage(aCgPDFContextRef)
         
     }
     

@@ -11,8 +11,10 @@
 @interface PDFRenderer : NSObject
 
 
-+(CGContextRef) createPDFContext:(CGRect)aCgRectinMediaBox path:(CFStringRef) aCfStrPath;
++(CGContextRef) newPDFContext:(CGRect)aCgRectinMediaBox path:(CFStringRef) aCfStrPath;
 
 + (CFArrayRef)createColumnsWithColumnCount:(int)columnCount;
+
++(void)createColumnarContentInPDFContext:(CGContextRef)aCgPDFContextRef withText:(NSString*)string;
 
 @end
