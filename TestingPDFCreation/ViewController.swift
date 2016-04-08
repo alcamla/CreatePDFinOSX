@@ -36,7 +36,8 @@ class ViewController: NSViewController {
         
         
         /// Create  rectangle corresponding to the desired page size.
-        var rect = CGRectMake(0, 0, 612, 792)
+        let rect = CGRectMake(0, 0, 612, 792)
+        let pageRect = rect
         
         /// Create the context to be used in the pdf rendering
         //let aCgPDFContextRef:CGContextRef? = createPDFContextWithRect(&rect, path: filePathString as NSString)
@@ -140,6 +141,30 @@ class ViewController: NSViewController {
         CGPDFContextEndPage(aCgPDFContextRef);
         
         
+        /**
+         The Fourth page Contents
+         ======================
+         */
+        
+        
+        let desiredHeight:CGFloat = 100.0
+        let rowOffset:CGFloat = 30.0
+        let desiredWidth:CGFloat = 400.0
+        
+        let row:CGRect = CGRectMake((pageRect.size.width/2) - (desiredWidth/2), pageRect.size.height - desiredHeight - rowOffset, desiredWidth, desiredHeight)
+        
+        CGPDFContextBeginPage(aCgPDFContextRef, nil);
+        PDFRenderer.createCustomColumnarContentInPDFContext(aCgPDFContextRef, withText: tableString, inRect: row)        
+        CGPDFContextEndPage(aCgPDFContextRef);
+        
+        
+        /**
+         The Fifth page Contents
+         ======================
+         */
+        
+        
+
     }
     
     func createPDFContextWithRect(inout aCgRectinMediaBox:CGRect, path aCfStrPath:CFStringRef )-> CGContext?{
