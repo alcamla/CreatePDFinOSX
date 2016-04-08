@@ -154,7 +154,7 @@ class ViewController: NSViewController {
         let row:CGRect = CGRectMake((pageRect.size.width/2) - (desiredWidth/2), pageRect.size.height - desiredHeight - rowOffset, desiredWidth, desiredHeight)
         
         CGPDFContextBeginPage(aCgPDFContextRef, nil);
-        PDFRenderer.createCustomColumnarContentInPDFContext(aCgPDFContextRef, withText: tableString, inRect: row)        
+        PDFRenderer.createCustomColumnarContentInPDFContext(aCgPDFContextRef, withText: tableString, inRect: row)
         CGPDFContextEndPage(aCgPDFContextRef);
         
         

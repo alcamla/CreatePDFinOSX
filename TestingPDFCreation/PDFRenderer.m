@@ -222,12 +222,38 @@
                           contentForTable:(NSArray*)tableContentArray
                               withRowSize:(CGSize)rowsSize
                                    inPage:(CGRect)page
-                        withOffsetFromTop:(CGFloat)offset
+                        withOffsetFromTop:(CGFloat)verticalOffset
                                  centered:(BOOL)isCentered
 {
     // Get the total number of rows that the table will have, including the header
     int totalRows;
+        //Indicates if the table includes a header
     BOOL hasHeader;
+        // Stores the size corresponding to a header row
+    CGSize headerRowSize = rowsSize;
+    headerRowSize.height = headerRowSize.height+2.0;
+    
+        //Indicates the horizontal offset for the tables that are not centered on the page
+    CGFloat horizontalOffset = 40.0;
+    
+    
+        // Stores the initialization point for the table view. consider the offset and if the table is centered, and if the table includes a header row
+    CGFloat currentRowHeight = hasHeader? headerRowSize.height : rowsSize.height;
+    
+    CGPoint currentRowOrigin;
+    if (isCentered){
+        
+        currentRowOrigin = CGPointMake((page.size.width/2) - (rowsSize.width/2), page.size.height - currentRowHeight - verticalOffset);
+        
+    } else {
+        
+        if (page.size.width - rowsSize.width > horizontalOffset){
+            currentRowOrigin = CGPointMake(horizontalOffset, page.size.height - currentRowHeight - verticalOffset);
+        }
+    }
+    
+    
+    
     if (headerContentArray != nil && headerContentArray.count>0){
         totalRows = totalRows+1;
         hasHeader = YES;
@@ -237,11 +263,25 @@
     }
     
     //Calculate the total height of the table.
+    CGFloat tableHeight = rowsSize.height*rowCount;
+    tableHeight = hasHeader?tableHeight+headerRowSize.height:tableHeight;
     
+
 
     // Create the array of paths corresponding to the header. Set the row height of the header a bit bigger than the rest of the table
     
-    //CFArrayRef headerRowPaths = [PDFRenderer createTableRowWithColumnCount:numberOfColums inRect:<#(CGRect)#>]
+    CFArrayRef headerRowPaths = [PDFRenderer createTableRowWithColumnCount:numberOfColums inRect:CGRectMake(currentRowOrigin.x, currentRowOrigin.y, headerRowSize.width, headerRowSize.height)];
+    
+        // For the remaining cells, create an array of rowpaths
+        // Create an array of layout paths, one for each column.
+    CFMutableArrayRef tableRowsPathsArray = CFArrayCreateMutable(kCFAllocatorDefault, rowCount, &kCFTypeArrayCallBacks);
+    
+
+    for (int rowIndex = 0; rowIndex<rowCount; rowIndex++){
+        currentRowOrigin.y -= rowsSize.height;
+        CFArrayRef currentRowPaths = [PDFRenderer createTableRowWithColumnCount:rowCount inRect:CGRectMake(currentRowOrigin.x, currentRowOrigin.y, rowsSize.width, rowsSize.height) withSubColumnsAtColumnNumbers:columnsWithSubcolumns];
+        CFArrayInsertValueAtIndex(tableRowsPathsArray, rowIndex, currentRowPaths);
+    }
 }
 
 
