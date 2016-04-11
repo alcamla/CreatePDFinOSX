@@ -163,6 +163,13 @@ class ViewController: NSViewController {
          ======================
          */
         
+        let rowSize:CGSize = CGSizeMake(400, 30);
+        //let contentForTable:NSArray = NSArray(array: ["a", "b", "c"]);
+        CGPDFContextBeginPage(aCgPDFContextRef, nil);
+        PDFRenderer.createPathsForTableWithColumnCount(3, rowCount: 3, subColumsForColumns: [2], contentForHeader:["Title1", "Title2", "Title3"], contentForTable: ["altitude", "beast", "casting","developer", "exception","function", "global", "hold","iterate", "jump", "kill", "list" ], withRowSize: rowSize, inPage: pageRect, withOffsetFromTop: 30, centered: true, inContext: aCgPDFContextRef);
+        //PDFRenderer.createPathsForTableWithColumnCount(2, rowCount: 1, subColumsForColumns: [2], contentForHeader: ["Title1", "Title2"], contentForTable: ["a", "b", "c"], withRowSize: rowSize, inPage: pageRect, withOffsetFromTop: 30, centered: false, inContext: aCgPDFContextRef);
+        CGPDFContextEndPage(aCgPDFContextRef);
+        
         
 
     }

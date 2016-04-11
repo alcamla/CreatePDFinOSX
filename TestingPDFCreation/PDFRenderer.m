@@ -7,13 +7,11 @@
 //
 
 #import "PDFRenderer.h"
+@import AppKit;
 
 @implementation PDFRenderer
 
 
--(void)createPDF{
-    
-}
 
 +(CGContextRef) newPDFContext:(CGRect)aCgRectinMediaBox path:(CFStringRef) aCfStrPath
 {
@@ -45,7 +43,11 @@
     
     int column;
     
+    // Determine the total number of columns in the row by including those columns that have subcolumns.
     int finalNumberOfColumns = columnCount + (int)columsWithSubcolumns.count;
+    
+    // Convert the columns numbers to column indexes
+    
     
     // Create a pointer to hold the array of column rectangles
     CGRect* columnRects = (CGRect*)calloc(finalNumberOfColumns, sizeof(*columnRects));
@@ -67,7 +69,7 @@
     
     if (columsWithSubcolumns != nil){
         for (NSNumber* columnNumber  in columsWithSubcolumns){
-            assert(columnNumber <= [NSNumber numberWithInt:columnCount]);
+            assert([columnNumber isLessThanOrEqualTo:[NSNumber numberWithInt:columnCount] ]);
         }
         
         
@@ -108,7 +110,7 @@
     
     // Inset all columns by a few pixels of margin.
     for (column = 0; column < columnCount; column++) {
-        columnRects[column] = CGRectInset(columnRects[column], 8.0, 15.0);
+        columnRects[column] = CGRectInset(columnRects[column], 4.0, 0.0);
     }
     
     // Create an array of layout paths, one for each column.
@@ -128,7 +130,7 @@
     return array;
 }
 
-//MARK: - Layout content
+//MARK: - Layout Tables
 
 +(void)createColumnarContentInPDFContext:(CGContextRef)aCgPDFContextRef withText:(NSString*)string{
     
@@ -139,7 +141,6 @@
     CFAttributedStringReplaceString(attString, CFRangeMake(0, 0), cfString);
     
     // Create the frameSetter
-    
     CTFramesetterRef frameSetter = CTFramesetterCreateWithAttributedString(attString);
     
     // Create the paths corresponding to a three column layout
@@ -148,7 +149,11 @@
     CFIndex pathCount = CFArrayGetCount(columnPaths);
     CFIndex startIndex = 0;
     int column;
-    
+    /**
+    //Get the first path, in order to test a function
+    CGPathRef path = (CGPathRef)CFArrayGetValueAtIndex(columnPaths, 0);
+    [PDFRenderer layoutText:string inPath:path usingContext:aCgPDFContextRef];
+    **/
     // Create a frame for each column (path).
     for (column = 0; column < pathCount; column++) {
         // Get the path for this column.
@@ -162,7 +167,6 @@
         CFRange frameRange = CTFrameGetVisibleStringRange(frame);
         startIndex += frameRange.length;
         CFRelease(frame);
-        
     }
     
     CFRelease(columnPaths);
@@ -170,7 +174,6 @@
     CFRelease(attString);
     
 }
-
 
 
 +(void)createCustomColumnarContentInPDFContext:(CGContextRef)aCgPDFContextRef withText:(NSString*)string inRect:(CGRect)rowRect{
@@ -182,7 +185,6 @@
     CFAttributedStringReplaceString(attString, CFRangeMake(0, 0), cfString);
     
     // Create the frameSetter
-    
     CTFramesetterRef frameSetter = CTFramesetterCreateWithAttributedString(attString);
     
     // Create the paths corresponding to a three column layout
@@ -215,30 +217,75 @@
     
 }
 
+//MARK: - Layout Content
+
++(void)layoutText:(NSString*)string withAttributes:(NSDictionary*)attributes inPath:(CGPathRef)path usingContext:(CGContextRef)aCgPDFContextRef{
+    
+    CFStringRef cfString = (__bridge CFStringRef)string;
+    
+    CFMutableAttributedStringRef attString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
+    CFAttributedStringReplaceString(attString, CFRangeMake(0, 0), cfString);
+    if (attributes != nil){
+        CFDictionaryRef cfAttributes = (__bridge CFDictionaryRef)attributes;
+        CFIndex leght = CFAttributedStringGetLength(attString);
+        CFAttributedStringSetAttributes(attString, CFRangeMake(0, leght), cfAttributes, true);
+    }
+    
+    
+    // Create the frameSetter
+    CTFramesetterRef frameSetter = CTFramesetterCreateWithAttributedString(attString);
+    
+    // Create a frame for this column and draw it.
+    CTFrameRef frame = CTFramesetterCreateFrame(frameSetter, CFRangeMake(0, 0), path, NULL);
+    CTFrameDraw(frame, aCgPDFContextRef);
+    
+    //Release those elements created in this function
+    CFRelease(frameSetter);
+    CFRelease(frame);
+    CFRelease(attString);
+    
+}
+
 +(void)createPathsForTableWithColumnCount:(int)numberOfColums
                                  rowCount:(int)rowCount
                       subColumsForColumns:(NSArray<NSNumber*>*)columnsWithSubcolumns
-                         contentForHeader:(NSArray*)headerContentArray
-                          contentForTable:(NSArray*)tableContentArray
+                         contentForHeader:(NSArray<NSString*>*)headerContentArray
+                          contentForTable:(NSArray<NSString*>*)tableContentArray
                               withRowSize:(CGSize)rowsSize
                                    inPage:(CGRect)page
                         withOffsetFromTop:(CGFloat)verticalOffset
                                  centered:(BOOL)isCentered
+                                inContext:(CGContextRef)aCgPDFContextRef
 {
-    // Get the total number of rows that the table will have, including the header
-    int totalRows;
-        //Indicates if the table includes a header
-    BOOL hasHeader;
-        // Stores the size corresponding to a header row
+    
+    NSMutableArray<NSNumber*>*subcolumns = [NSMutableArray new];
+    for (NSNumber *subcolumn in columnsWithSubcolumns){
+        [subcolumns addObject:subcolumn];
+    }
+    if (subcolumns != nil){
+        if([subcolumns count] > 0 ){
+            NSLog(@"Non nil, non empty array");
+        }
+    }
+    // Get the total number of rows that the table will have, excluding the header
+    int totalRows = ([subcolumns count]>0)? (rowCount*(numberOfColums + (int)[subcolumns count])): rowCount*numberOfColums;
+    
+    //Verify that the elements in the text array are enough to fill the table
+    assert(totalRows == tableContentArray.count);
+    
+    //Indicates if the table includes a header
+    BOOL hasHeader = (headerContentArray != nil && headerContentArray.count > 0);
+    // Stores the size corresponding to a header row
     CGSize headerRowSize = rowsSize;
     headerRowSize.height = headerRowSize.height+2.0;
     
-        //Indicates the horizontal offset for the tables that are not centered on the page
+    //Indicates the horizontal offset for the tables that are not centered on the page
     CGFloat horizontalOffset = 40.0;
     
     
-        // Stores the initialization point for the table view. consider the offset and if the table is centered, and if the table includes a header row
+    // Stores the initialization point for the table view. consider the offset and if the table is centered, and if the table includes a header row
     CGFloat currentRowHeight = hasHeader? headerRowSize.height : rowsSize.height;
+    
     
     CGPoint currentRowOrigin;
     if (isCentered){
@@ -249,47 +296,90 @@
         
         if (page.size.width - rowsSize.width > horizontalOffset){
             currentRowOrigin = CGPointMake(horizontalOffset, page.size.height - currentRowHeight - verticalOffset);
+        } else{
+            // Assume that no horizontal offset can be applied
+            currentRowOrigin =CGPointMake(0, page.size.height-currentRowHeight - verticalOffset);
         }
     }
     
     
-    
-    if (headerContentArray != nil && headerContentArray.count>0){
-        totalRows = totalRows+1;
-        hasHeader = YES;
-    } else{
-        totalRows = rowCount;
-        hasHeader = NO;
+    // Create the array of paths corresponding to the header. Set the row height of the header a bit bigger than the rest of the table
+    if (hasHeader){
+        
+        //Verify if the header content and the number of columns in the header correspond
+        assert(headerContentArray.count == numberOfColums);
+        
+        CFArrayRef headerRowPaths = [PDFRenderer createTableRowWithColumnCount:numberOfColums inRect:CGRectMake(currentRowOrigin.x, currentRowOrigin.y, headerRowSize.width, headerRowSize.height)];
+        
+        // Isert the content of the header.
+        
+        NSDictionary *headerAttributes = [PDFRenderer attributesDictionaryForTableHeader];
+        
+        // Iterate over all the columns of the header
+        for (int i=0; i<headerContentArray.count; i++){
+            
+            // Get the string corresponding to the current column
+            NSString *string = [headerContentArray objectAtIndex:i];
+            // Get the path corresponding to the current column of the header
+            CGPathRef path = (CGPathRef)CFArrayGetValueAtIndex(headerRowPaths, i);
+            //Layout the text in the path corresponding to the current column of the header
+            [PDFRenderer layoutText:string withAttributes:headerAttributes inPath:path usingContext:aCgPDFContextRef];
+        }
     }
     
-    //Calculate the total height of the table.
-    CGFloat tableHeight = rowsSize.height*rowCount;
-    tableHeight = hasHeader?tableHeight+headerRowSize.height:tableHeight;
     
-
-
-    // Create the array of paths corresponding to the header. Set the row height of the header a bit bigger than the rest of the table
-    
-    CFArrayRef headerRowPaths = [PDFRenderer createTableRowWithColumnCount:numberOfColums inRect:CGRectMake(currentRowOrigin.x, currentRowOrigin.y, headerRowSize.width, headerRowSize.height)];
-    
-        // For the remaining cells, create an array of rowpaths
-        // Create an array of layout paths, one for each column.
-    CFMutableArrayRef tableRowsPathsArray = CFArrayCreateMutable(kCFAllocatorDefault, rowCount, &kCFTypeArrayCallBacks);
-    
-
+    // Create an array of layout paths, one for each column.
+    int textCellIndex = 0;
+    NSDictionary *cellAttributes = [PDFRenderer attributesDictionaryForTableCellContent];
     for (int rowIndex = 0; rowIndex<rowCount; rowIndex++){
         currentRowOrigin.y -= rowsSize.height;
-        CFArrayRef currentRowPaths = [PDFRenderer createTableRowWithColumnCount:rowCount inRect:CGRectMake(currentRowOrigin.x, currentRowOrigin.y, rowsSize.width, rowsSize.height) withSubColumnsAtColumnNumbers:columnsWithSubcolumns];
-        CFArrayInsertValueAtIndex(tableRowsPathsArray, rowIndex, currentRowPaths);
+        CFArrayRef currentRowPaths = [PDFRenderer createTableRowWithColumnCount:numberOfColums inRect:CGRectMake(currentRowOrigin.x, currentRowOrigin.y, rowsSize.width, rowsSize.height) withSubColumnsAtColumnNumbers:columnsWithSubcolumns];
+        // Insert the text in the current row. Verify if the number of elements in the text is correct.
+        CFIndex pathCount = CFArrayGetCount(currentRowPaths);
+        for (int cell = 0; cell < pathCount; cell++){
+            CGPathRef path = (CGPathRef)CFArrayGetValueAtIndex(currentRowPaths, cell);
+            [PDFRenderer layoutText:[tableContentArray objectAtIndex:textCellIndex] withAttributes:cellAttributes inPath:path usingContext:aCgPDFContextRef];
+            textCellIndex++;
+        }
     }
 }
 
+//MARK: Common paragraph attributes
+
++(NSDictionary*)attributesDictionaryForTableHeader{
+    // The color of the font
+    NSColor *color = [NSColor blueColor];
+    // The paragraph Stile of the header
+    NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
+    [paragraphStyle setParagraphStyle:[NSParagraphStyle defaultParagraphStyle]];
+    paragraphStyle.alignment = NSTextAlignmentLeft;
+    // The font for the Header
+    NSFontManager *fontManager = [NSFontManager sharedFontManager];
+    NSFont *font = [fontManager fontWithFamily:@"Helvetica Neue" traits:NSBoldFontMask weight:0 size:15];
+    
+    NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithObject:color forKey:NSForegroundColorAttributeName];
+    [attributes setObject:paragraphStyle forKey:NSParagraphStyleAttributeName];
+    [attributes setObject:font forKey:NSFontAttributeName];
+    return attributes;
+}
 
 
-
-
-
-
++(NSDictionary*)attributesDictionaryForTableCellContent{
+    // The color of the font
+    NSColor *color = [NSColor blackColor];
+    // The paragraph Stile of the header
+    NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
+    [paragraphStyle setParagraphStyle:[NSParagraphStyle defaultParagraphStyle]];
+    paragraphStyle.alignment = NSTextAlignmentLeft;
+    // The font for the Header
+    NSFontManager *fontManager = [NSFontManager sharedFontManager];
+    NSFont *font = [fontManager fontWithFamily:@"Helvetica Neue" traits:NSUnboldFontMask weight:0 size:13];
+    
+    NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithObject:color forKey:NSForegroundColorAttributeName];
+    [attributes setObject:paragraphStyle forKey:NSParagraphStyleAttributeName];
+    [attributes setObject:font forKey:NSFontAttributeName];
+    return attributes;
+}
 
 
 @end

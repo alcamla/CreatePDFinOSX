@@ -19,4 +19,15 @@
 
 +(void)createCustomColumnarContentInPDFContext:(CGContextRef)aCgPDFContextRef withText:(NSString*)string inRect:(CGRect)rowRect;
 
++(void)createPathsForTableWithColumnCount:(int)numberOfColums
+                                 rowCount:(int)rowCount
+                      subColumsForColumns:(NSArray<NSNumber*>*)columnsWithSubcolumns
+                         contentForHeader:(NSArray<NSString*>*)headerContentArray
+                          contentForTable:(NSArray<NSString*>*)tableContentArray
+                              withRowSize:(CGSize)rowsSize
+                                   inPage:(CGRect)page
+                        withOffsetFromTop:(CGFloat)verticalOffset
+                                 centered:(BOOL)isCentered
+                                inContext:(CGContextRef)aCgPDFContextRef;
+
 @end
