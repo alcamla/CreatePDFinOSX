@@ -18,7 +18,6 @@
     return @"Helvetica Neue";
 }
 
-
 /// The default size of the page used to generate the pdf
 +(CGRect)defaultPageRect{
     return CGRectMake(0, 0, 612, 792);
@@ -26,7 +25,7 @@
 
 /// Indicates the horizontal space available for laying out text
 +(CGFloat)defaultParagraphWidth{
-    return [PDFRenderer defaultPageRect].size.width * .96;
+    return [PDFRenderer defaultPageRect].size.width * .92;
 }
 
 /// Indicates the vertical space that must be discarted at the top or bottom of the page
@@ -38,6 +37,22 @@
 +(CGFloat)defaultHorizontalOffset{
     return [PDFRenderer defaultPageRect].size.width * 0.04;
 }
+
+/// The space added after a title
++(CGFloat)defaultSpacingAfterTitleParagraph{
+    return 17.0;
+}
+
+/// The space added after a paragraph
++(CGFloat)defaultSpacingAfterBodyParagraph{
+    return 13.0;
+}
+
+/// The space added after a header
++(CGFloat)defaultSpacingAfterHeaderParagraph{
+    return 15.0;
+}
+
 
 /**
  @brief Utility method to convert a distance meassured from the top of the page into coordinate ready value.
@@ -83,9 +98,9 @@
  
  @param columnCount             The number of colums, or cells, that the row will have.
  */
-+ (CFArrayRef)createColumnsWithColumnCount:(int)columnCount
++ (CFArrayRef)newColumnsWithColumnCount:(int)columnCount
 {
-    return [PDFRenderer createTableRowWithColumnCount:columnCount inRect:CGRectNull withSubColumnsAtColumnNumbers:nil];
+    return [PDFRenderer newTableRowWithColumnCount:columnCount inRect:CGRectNull withSubColumnsAtColumnNumbers:nil];
 }
 
 
@@ -96,8 +111,8 @@
  @param columnCount             The number of colums, or cells, that the row will have.
  @param rowRect                 The rectangular area in which the row will be inscribed.
  */
-+(CFArrayRef)createTableRowWithColumnCount:(int)columnCount  inRect:(CGRect)rowRect{
-    return [PDFRenderer createTableRowWithColumnCount:columnCount inRect:rowRect withSubColumnsAtColumnNumbers:nil];
++(CFArrayRef)newTableRowWithColumnCount:(int)columnCount  inRect:(CGRect)rowRect{
+    return [PDFRenderer newTableRowWithColumnCount:columnCount inRect:rowRect withSubColumnsAtColumnNumbers:nil];
 }
 
 /**
@@ -109,7 +124,7 @@
  @param columnsWithSubcolums    Indicates which cells are going to be splited, generating two equally sized sub-cells.
 */
 
-+(CFArrayRef)createTableRowWithColumnCount:(int)columnCount inRect:(CGRect)rowRect withSubColumnsAtColumnNumbers:(NSArray<NSNumber*>*)columsWithSubcolumns{
++(CFArrayRef)newTableRowWithColumnCount:(int)columnCount inRect:(CGRect)rowRect withSubColumnsAtColumnNumbers:(NSArray<NSNumber*>*)columsWithSubcolumns{
     
     int column;
     
@@ -200,19 +215,25 @@
 
 #pragma mark - Laying paragraph content
 
-+(void)layoutTitleInPDFContext:(CGContextRef)aCgPDFContextRef text:(NSString*)string atTopLeftPoint:(CGPoint)origin{
++(CGPoint)layoutTitleInPDFContext:(CGContextRef)aCgPDFContextRef text:(NSString*)string atTopLeftCorner:(CGPoint)origin{
     NSDictionary *attributes = [PDFRenderer attributesDictionaryForTitle];
-    [PDFRenderer layoutTextPDFContext:aCgPDFContextRef text:string withAttributes:attributes atTopLeftPoint:origin];
+    CGPoint bottomCorner = [PDFRenderer layoutTextPDFContext:aCgPDFContextRef text:string withAttributes:attributes atTopLeftCorner:origin];
+    bottomCorner.y-= [PDFRenderer defaultSpacingAfterTitleParagraph];
+    return bottomCorner;
 }
 
-+(void)layoutBodyInPDFContext:(CGContextRef)aCgPDFContextRef text:(NSString*)string atTopLeftPoint:(CGPoint)origin{
++(CGPoint)layoutBodyInPDFContext:(CGContextRef)aCgPDFContextRef text:(NSString*)string atTopLeftCorner:(CGPoint)origin{
     NSDictionary *attributes = [PDFRenderer attributesDictionaryForBody];
-    [PDFRenderer layoutTextPDFContext:aCgPDFContextRef text:string withAttributes:attributes atTopLeftPoint:origin];
+    CGPoint bottomCorner =  [PDFRenderer layoutTextPDFContext:aCgPDFContextRef text:string withAttributes:attributes atTopLeftCorner:origin];
+    bottomCorner.y-= [PDFRenderer defaultSpacingAfterBodyParagraph];
+    return bottomCorner;
 }
 
-+(void)layouHeaderInPDFContext:(CGContextRef)aCgPDFContextRef text:(NSString*)string atTopLeftPoint:(CGPoint)origin{
++(CGPoint)layouHeaderInPDFContext:(CGContextRef)aCgPDFContextRef text:(NSString*)string atTopLeftCorner:(CGPoint)origin{
     NSDictionary *attributes = [PDFRenderer attributesDictionaryForHeader];
-    [PDFRenderer layoutTextPDFContext:aCgPDFContextRef text:string withAttributes:attributes atTopLeftPoint:origin];
+    CGPoint bottomCorner =  [PDFRenderer layoutTextPDFContext:aCgPDFContextRef text:string withAttributes:attributes atTopLeftCorner:origin];
+    bottomCorner.y-= [PDFRenderer defaultSpacingAfterHeaderParagraph];
+    return bottomCorner;
 }
 
 #pragma mark - Laying Columnar Content
@@ -244,7 +265,7 @@
     CTFramesetterRef frameSetter = CTFramesetterCreateWithAttributedString(attString);
     
     // Create the paths corresponding to a three column layout
-    CFArrayRef columnPaths = [PDFRenderer createTableRowWithColumnCount:numberOfColumns inRect:rowRect withSubColumnsAtColumnNumbers:subcolumns];
+    CFArrayRef columnPaths = [PDFRenderer newTableRowWithColumnCount:numberOfColumns inRect:rowRect withSubColumnsAtColumnNumbers:subcolumns];
     
     CFIndex pathCount = CFArrayGetCount(columnPaths);
     CFIndex startIndex = 0;
@@ -364,7 +385,7 @@
         //Verify if the header content and the number of columns in the header correspond
         NSAssert(headerContentArray.count == numberOfColums, @"The number of cells of the header does not match the number of strings provided.");
         
-        CFArrayRef headerRowPaths = [PDFRenderer createTableRowWithColumnCount:numberOfColums inRect:CGRectMake(currentRowOrigin.x, currentRowOrigin.y, headerRowSize.width, headerRowSize.height)];
+        CFArrayRef headerRowPaths = [PDFRenderer newTableRowWithColumnCount:numberOfColums inRect:CGRectMake(currentRowOrigin.x, currentRowOrigin.y, headerRowSize.width, headerRowSize.height)];
         
         // Isert the content of the header.
         
@@ -380,6 +401,7 @@
             //Layout the text in the path corresponding to the current column of the header
             [PDFRenderer layoutText:string withAttributes:headerAttributes inPath:path usingContext:aCgPDFContextRef];
         }
+        CFRelease(headerRowPaths);
     }
     
     
@@ -391,16 +413,17 @@
     // Create an array of layout paths, one for each column.
     
     // This index is used to iterate over the tableContentArray, as we insert the content for each cell.
-    int textCellIndex = 0;
+    CFIndex textCellIndex = 0;
     // Dictionary with attributes for cell text.
     NSDictionary *cellAttributes = [PDFRenderer attributesDictionaryForTableCellContent];
     
     // Iteration that creates the rows
+    CFArrayRef currentRowPaths;
     for (int rowIndex = 0; rowIndex<rowCount; rowIndex++){
         // Move the origin point downwards
         currentRowOrigin.y -= rowsSize.height;
         // Create the paths for each cell in this row
-        CFArrayRef currentRowPaths = [PDFRenderer createTableRowWithColumnCount:numberOfColums inRect:CGRectMake(currentRowOrigin.x, currentRowOrigin.y, rowsSize.width, rowsSize.height) withSubColumnsAtColumnNumbers:columnsWithSubcolumns];
+        currentRowPaths = [PDFRenderer newTableRowWithColumnCount:numberOfColums inRect:CGRectMake(currentRowOrigin.x, currentRowOrigin.y, rowsSize.width, rowsSize.height) withSubColumnsAtColumnNumbers:columnsWithSubcolumns];
         // Insert the text in each cell of the current row
         CFIndex pathCount = CFArrayGetCount(currentRowPaths);
         for (int cell = 0; cell < pathCount; cell++){
@@ -408,6 +431,7 @@
             [PDFRenderer layoutText:[tableContentArray objectAtIndex:textCellIndex] withAttributes:cellAttributes inPath:path usingContext:aCgPDFContextRef];
             textCellIndex++;
         }
+        CFRelease(currentRowPaths);
     }
 }
 
@@ -453,12 +477,16 @@
 }
 
 /**
- @brief
- @discussion
- @param
+ @brief Lays out text.
+ @discussion This method lays out text in the given context. The rectagle in which the text is inscribed is calculated by the method, and has top left corner passed as argument.
+ @param aCgPDFContextRef    The context in which the text is rendered
+ @param string              The text to render
+ @param attributes          The attributes of the text to be rendered
+ @param corner              The top left corner of the rect in which the text will be rendered, meassured in the @c aCgPDFContextRef
+ @return CGPoint            The point corresponding to the bottom left corner of the rectangle used to render the text.
  
  */
-+(void)layoutTextPDFContext:(CGContextRef)aCgPDFContextRef text:(NSString*)string withAttributes:(NSDictionary*)attributes atTopLeftPoint:(CGPoint)origin{
++(CGPoint)layoutTextPDFContext:(CGContextRef)aCgPDFContextRef text:(NSString*)string withAttributes:(NSDictionary*)attributes atTopLeftCorner:(CGPoint)corner{
     
     CFStringRef cfString = (__bridge CFStringRef)string;
     CFMutableAttributedStringRef attString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
@@ -478,7 +506,7 @@
     CGSize frameSize = CTFramesetterSuggestFrameSizeWithConstraints(frameSetter, CFRangeMake(0, 0), NULL, CGSizeMake([PDFRenderer defaultParagraphWidth], MAXFLOAT), &fitRange);
     
     // Move the origin to the bottom left corner
-    CGRect rect = CGRectMake(origin.x, origin.y - frameSize.height, frameSize.width, frameSize.height);
+    CGRect rect = CGRectMake(corner.x, corner.y - frameSize.height, frameSize.width, frameSize.height);
     
     // Create the path with the calculated size
     CGMutablePathRef path = CGPathCreateMutable();
@@ -491,6 +519,10 @@
     CFRelease(frame);
     CFRelease(frameSetter);
     CFRelease(attString);
+    CFRelease(path);
+    
+    // Return the origin of the rectangle inscribed in the path. This rectangle indicates where the text was layout, so the next render method does not overlay the things already drawn.
+    return rect.origin;
 }
 
 
@@ -568,7 +600,7 @@
     // The paragraph Stile of the header
     NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
     [paragraphStyle setParagraphStyle:[NSParagraphStyle defaultParagraphStyle]];
-    paragraphStyle.alignment = NSTextAlignmentLeft;
+    paragraphStyle.alignment = NSTextAlignmentJustified;
     // The font for the Header
     NSFontManager *fontManager = [NSFontManager sharedFontManager];
     NSFont *font = [fontManager fontWithFamily:@"Helvetica Neue" traits:NSUnboldFontMask weight:0 size:12];
