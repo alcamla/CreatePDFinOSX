@@ -71,7 +71,7 @@ class ViewController: NSViewController {
         // Create a path which bounds the area where you will be drawing text.
         // The path need not be rectangular.
         let path:CGMutablePathRef = CGPathCreateMutable()
-        //This step is incredibly important.
+        //This step is incredibly important. It clips the path to the selected rectangular area in which the text will be layout.
         CGPathAddRect(path, nil, CGRectMake((612/2)-100,(792)-100-40, 200,100))
         
         // Initialize a string.
@@ -94,9 +94,6 @@ class ViewController: NSViewController {
         CFAttributedStringSetAttribute(attrString, CFRangeMake(0, 12),
                                        kCTForegroundColorAttributeName, red);
         
-//        let frameSetter:CTFramesetterRef = CTFramesetterCreateWithAttributedString(stringMe)
-//        let frame:CTFrameRef = CTFramesetterCreateFrame(frameSetter, CFRangeMake(0, stringMe.length), path, nil)
-//        CTFrameDraw(frame, aCgPDFContextRef!)
         
         // Create the framesetter with the attributed string.
         let frameSetter:CTFramesetterRef = CTFramesetterCreateWithAttributedString(attrString)
@@ -115,12 +112,16 @@ class ViewController: NSViewController {
          ======================
          */
         
+        // This is just to show how to add pages to a given context.
+        
         // Begin a page in the given context
         CGPDFContextBeginPage(aCgPDFContextRef, nil)
         
         // Draw the specified frame in the given context
-        CTFrameDraw(frame, aCgPDFContextRef)
-        
+        //CTFrameDraw(frame, aCgPDFContextRef)
+        let title = "MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove.MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove.MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove.MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove.MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove.MR. UTTERSON the lawyer was a man of a rugged countenance, that was never lighted by a smile; cold, scanty and embarrassed in discourse; backward in sentiment; lean, long, dusty, dreary, and yet somehow lovable. At friendly meetings, and when the wine was to his taste, something eminently human beaconed from his eye; something indeed which never found its way into his talk, but which spoke not only in these silent symbols of the after-dinner face, but more often and loudly in the acts of his life. He was austere with himself; drank gin when he was alone, to mortify a taste for vintages; and though he enjoyed the theatre, had not crossed the doors of one for twenty years. But he had an approved tolerance for others; sometimes wondering, almost with envy, at the high pressure of spirits involved in their misdeeds; and in any extremity inclined to help rather than to reprove."
+        let origin  = CGPointMake(PDFRenderer.defaultHorizontalOffset(), PDFRenderer.yCoordinateForPointWithDistanceFromTop(PDFRenderer.defaultVerticalOffset()));
+        PDFRenderer.layoutBodyInPDFContext(aCgPDFContextRef, text: title, atTopLeftPoint:origin);
         // Terminate the page
         CGPDFContextEndPage(aCgPDFContextRef)
         
@@ -136,7 +137,7 @@ class ViewController: NSViewController {
         
         CGPDFContextBeginPage(aCgPDFContextRef, nil);
         
-        PDFRenderer.createColumnarContentInPDFContext(aCgPDFContextRef, withText: tableString)
+        PDFRenderer.layoutColumnarContentInPDFContext(aCgPDFContextRef, withText: tableString, inRect: CGRectNull, inNumberOfColums: 3, withSplitedColums: nil);
         
         CGPDFContextEndPage(aCgPDFContextRef);
         
@@ -154,7 +155,9 @@ class ViewController: NSViewController {
         let row:CGRect = CGRectMake((pageRect.size.width/2) - (desiredWidth/2), pageRect.size.height - desiredHeight - rowOffset, desiredWidth, desiredHeight)
         
         CGPDFContextBeginPage(aCgPDFContextRef, nil);
-        PDFRenderer.createCustomColumnarContentInPDFContext(aCgPDFContextRef, withText: tableString, inRect: row)
+        
+        PDFRenderer.layoutColumnarContentInPDFContext(aCgPDFContextRef, withText: tableString, inRect: row, inNumberOfColums: 5, withSplitedColums: [1, 5])
+        
         CGPDFContextEndPage(aCgPDFContextRef);
         
         
@@ -166,64 +169,12 @@ class ViewController: NSViewController {
         let rowSize:CGSize = CGSizeMake(400, 30);
         //let contentForTable:NSArray = NSArray(array: ["a", "b", "c"]);
         CGPDFContextBeginPage(aCgPDFContextRef, nil);
-        PDFRenderer.createPathsForTableWithColumnCount(3, rowCount: 3, subColumsForColumns: [2], contentForHeader:["Title1", "Title2", "Title3"], contentForTable: ["altitude", "beast", "casting","developer", "exception","function", "global", "hold","iterate", "jump", "kill", "list" ], withRowSize: rowSize, inPage: pageRect, withOffsetFromTop: 30, centered: true, inContext: aCgPDFContextRef);
+        PDFRenderer.layoutTableWithColumnCount(3, rowCount: 3, subColumsForColumns: [2], contentForHeader:["Title1", "Title2", "Title3"], contentForTable: ["altitude", "beast", "casting","developer", "exception","function", "global", "hold","iterate", "jump", "kill", "list" ], withRowSize: rowSize, inPage: pageRect, withOffsetFromTop: 30, centered: true, inContext: aCgPDFContextRef);
         //PDFRenderer.createPathsForTableWithColumnCount(2, rowCount: 1, subColumsForColumns: [2], contentForHeader: ["Title1", "Title2"], contentForTable: ["a", "b", "c"], withRowSize: rowSize, inPage: pageRect, withOffsetFromTop: 30, centered: false, inContext: aCgPDFContextRef);
         CGPDFContextEndPage(aCgPDFContextRef);
         
         
 
     }
-    
-    func createPDFContextWithRect(inout aCgRectinMediaBox:CGRect, path aCfStrPath:CFStringRef )-> CGContext?{
-        
-        //Declare the variables that will be used
-        var aCgContextRefNewPDF:CGContextRef?
-        var aCfurlRefPDF: CFURLRef?;
-        
-        // Create the url with the given path
-        aCfurlRefPDF = CFURLCreateWithFileSystemPath(kCFAllocatorSystemDefault, aCfStrPath, CFURLPathStyle.CFURLPOSIXPathStyle, false)
-        if aCfurlRefPDF != nil{
-            aCgContextRefNewPDF = CGPDFContextCreateWithURL(aCfurlRefPDF, &aCgRectinMediaBox, nil)
-        }
-        
-        return aCgContextRefNewPDF
-    }
-    
-    func createColumnsWithColunmCount(columnCount:Int)->(CFArrayRef){
-        
-        let columnRects:UnsafeMutablePointer<CGRect> = UnsafeMutablePointer<CGRect>(calloc(columnCount, sizeofValue(CGRect)))
-        
-        // Set the first column to cover the entire view
-        let pageSize = CGRectMake(0, 0, 612, 792)
-        columnRects[0] = pageSize
-        
-        // Divide the columns equally across the frame's width
-        let columnWidth:CGFloat = CGRectGetWidth(pageSize)/CGFloat(columnCount)
-        
-        for column in 0..<columnCount{
-            CGRectDivide(columnRects[column], &columnRects[column], &columnRects[column+1], columnWidth, CGRectEdge.MinXEdge)
-        }
-        
-        // Insert all the columns by a few pixels of margin
-        for column in 0..<columnCount{
-            columnRects[column] = CGRectInset(columnRects[column], 8.0, 15.0)
-        }
-        // Create an array of layout paths, one for each column
-        var callBacks = CFArrayCallBacks()
-        let array:CFMutableArrayRef = CFArrayCreateMutable(kCFAllocatorDefault, columnCount, &callBacks)
-        
-        for column in 0..<columnCount{
-            var path:CGMutablePathRef = CGPathCreateMutable()
-            CGPathAddRect(path, nil, columnRects[column])
-            CFArrayInsertValueAtIndex(array, column, &path)
-        }
-        
-        return array
-    }
-    
-    
-
-    
-
 }
 
